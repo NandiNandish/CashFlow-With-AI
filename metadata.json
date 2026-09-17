@@ -1,0 +1,6 @@
+{
+  "name": "Paytm CashFlow AI",
+  "description": "Predict. Explain. Plan. AI-powered financial copilot prototype for cash-flow forecasting, stress detection, explainable insights, and What-If scenario simulations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
