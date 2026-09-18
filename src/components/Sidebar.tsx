@@ -15,7 +15,10 @@ import {
   Activity,
   X,
   ChevronRight,
-  LogOut
+  LogOut,
+  Calendar,
+  FileText,
+  Zap
 } from 'lucide-react';
 import { PaytmLogo } from './PaytmLogo';
 import { UserFinancialState } from '../types';
@@ -27,12 +30,14 @@ interface SidebarProps {
   userState: UserFinancialState;
   onOpenResponsibleAi: () => void;
   onOpenCopilot: () => void;
+  onOpenSimulateTx?: () => void;
   onResetDemo: () => void;
   onLogout?: () => void;
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
   correctedCount?: number;
   warningCapsCount?: number;
+  hasSimulatedTx?: boolean;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -41,12 +46,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userState,
   onOpenResponsibleAi,
   onOpenCopilot,
+  onOpenSimulateTx,
   onResetDemo,
   onLogout,
   isMobileOpen = false,
   onCloseMobile,
   correctedCount = 0,
   warningCapsCount = 0,
+  hasSimulatedTx = false,
 }) => {
   const navItems = [
     { 
@@ -62,19 +69,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
       description: '30-day liquidity timeline'
     },
     { 
+      id: 'commitments', 
+      label: 'Commitments', 
+      icon: <Calendar className="w-4 h-4" />,
+      badge: 'Timeline',
+      badgeColor: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+      description: 'Obligations & insurance schedule'
+    },
+    { 
       id: 'what-if', 
       label: 'What If?', 
       icon: <Sliders className="w-4 h-4" />,
-      badge: 'Hero Demo',
-      description: 'EMI & loan trade-off sandbox'
+      badge: 'Sandbox',
+      description: 'Unified scenario engine'
+    },
+    { 
+      id: 'health', 
+      label: 'Health Score', 
+      icon: <Activity className="w-4 h-4" />,
+      badge: '72/100',
+      badgeColor: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
+      description: 'Deterministic 5-factor score'
+    },
+    { 
+      id: 'reports', 
+      label: 'Reports & PDF', 
+      icon: <FileText className="w-4 h-4" />,
+      badge: 'Export',
+      badgeColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+      description: 'Money flow & PDF brief'
     },
     { 
       id: 'transactions', 
       label: 'Transactions', 
       icon: <ReceiptText className="w-4 h-4" />,
-      badge: correctedCount > 0 ? `${correctedCount} edited` : undefined,
-      badgeColor: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-      description: 'Ledger & re-categorization'
+      badge: hasSimulatedTx ? 'SIMULATED' : correctedCount > 0 ? `${correctedCount} edited` : undefined,
+      badgeColor: hasSimulatedTx ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 animate-pulse' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+      description: 'Ledger & live simulations'
     },
     { 
       id: 'spending', 
@@ -198,7 +229,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Bottom Section: User Profile & Actions */}
-        <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-3">
+        <div className="p-4 border-t border-slate-800/80 bg-slate-950/60 space-y-2.5">
+          {/* Live Transaction Simulator Trigger */}
+          {onOpenSimulateTx && (
+            <button
+              id="btn-sidebar-simulate-tx"
+              onClick={onOpenSimulateTx}
+              className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/15 hover:from-amber-500/30 hover:to-orange-500/25 text-amber-300 border border-amber-500/40 font-bold text-xs flex items-center justify-between shadow-sm transition-all cursor-pointer group"
+            >
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                <span>Simulate Transaction</span>
+              </div>
+              <span className="text-[9px] uppercase font-mono px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                WHAT-IF
+              </span>
+            </button>
+          )}
+
           {/* Ask CashFlow AI Copilot Button */}
           <button
             id="btn-sidebar-ask-copilot"

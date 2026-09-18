@@ -30,6 +30,10 @@ import { AuthPage } from './components/AuthPage';
 import { NotificationsModal } from './components/NotificationsModal';
 import { AiCopilotDrawer } from './components/AiCopilotDrawer';
 import { WeeklySpendingEmailModal } from './components/WeeklySpendingEmailModal';
+import { CommitmentsPage } from './components/CommitmentsPage';
+import { FinancialHealthView } from './components/FinancialHealthView';
+import { ReportsPage } from './components/ReportsPage';
+import { LiveTransactionSimulatorModal } from './components/LiveTransactionSimulatorModal';
 
 import { 
   INITIAL_USER_STATE, 
@@ -40,9 +44,11 @@ import {
   MOCK_SMART_RECOMMENDATIONS,
   INITIAL_SPENDING_CAPS,
   INITIAL_WEEKLY_EMAIL_SETTINGS,
-  INITIAL_IN_APP_NOTIFICATIONS
+  INITIAL_IN_APP_NOTIFICATIONS,
+  INITIAL_COMMITMENTS,
+  INITIAL_INSURANCE_POLICIES
 } from './data/mockFinancialData';
-import { Transaction, SpendingCap, WeeklyEmailSettings, InAppNotification } from './types';
+import { Transaction, SpendingCap, WeeklyEmailSettings, InAppNotification, Commitment, InsurancePolicy } from './types';
 
 export default function App() {
   // Navigation State
@@ -59,6 +65,7 @@ export default function App() {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState<boolean>(false);
   const [isWeeklyEmailModalOpen, setIsWeeklyEmailModalOpen] = useState<boolean>(false);
+  const [isSimulateModalOpen, setIsSimulateModalOpen] = useState<boolean>(false);
 
   // In-App Toast Alert State
   const [inAppToast, setInAppToast] = useState<{
@@ -71,6 +78,8 @@ export default function App() {
   // Financial & Transactions State
   const [userState, setUserState] = useState(INITIAL_USER_STATE);
   const [stressAlert, setStressAlert] = useState(INITIAL_STRESS_ALERT);
+  const [commitments, setCommitments] = useState<Commitment[]>(INITIAL_COMMITMENTS);
+  const [policies, setPolicies] = useState<InsurancePolicy[]>(INITIAL_INSURANCE_POLICIES);
 
   // Spending Caps & Email Settings State
   const [spendingCaps, setSpendingCaps] = useState<SpendingCap[]>(INITIAL_SPENDING_CAPS);
@@ -148,7 +157,7 @@ export default function App() {
   };
 
   // Handler for sending/simulating weekly email
-  const handleSendWeeklyEmail = () => {
+  const handleSendWeeklyEmail = async () => {
     const formattedDate = new Date().toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -158,6 +167,25 @@ export default function App() {
       ...prev,
       lastSentAt: `Sent on ${formattedDate}`,
     }));
+
+    // Trigger backend notification dispatch
+    try {
+      await fetch('/api/notifications/weekly-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail: emailSettings.email,
+          categories: MOCK_CATEGORY_SPENDING,
+          spendingCaps: spendingCaps,
+          stats: {
+            userState,
+            warningCapsCount,
+          },
+        }),
+      });
+    } catch (e) {
+      console.warn('Backend email dispatch notification queued:', e);
+    }
 
     // Add in-app notification
     const emailNotif: InAppNotification = {
@@ -205,11 +233,48 @@ export default function App() {
     );
   };
 
+  // Handle live simulated transactions from Simulator Modal
+  const handleApplySimulatedTx = (simulatedTx: Transaction) => {
+    setTransactions((prev) => [simulatedTx, ...prev]);
+    const delta = simulatedTx.type === 'expense' ? -simulatedTx.amount : simulatedTx.amount;
+    setUserState((prev) => ({
+      ...prev,
+      currentBalance: Math.max(0, prev.currentBalance + delta),
+      projectedBuffer: Math.max(0, prev.projectedBuffer + delta),
+    }));
+    showToast(
+      'Simulated Transaction Recorded',
+      `${simulatedTx.description} of ₹${Math.abs(simulatedTx.amount).toLocaleString('en-IN')} applied in Sandbox mode.`,
+      'info'
+    );
+  };
+
+  // Remove a simulated transaction
+  const handleRemoveSimulatedTx = (txId: string) => {
+    const tx = transactions.find((t) => t.id === txId);
+    if (tx) {
+      setTransactions((prev) => prev.filter((t) => t.id !== txId));
+      const delta = tx.type === 'expense' ? tx.amount : -tx.amount;
+      setUserState((prev) => ({
+        ...prev,
+        currentBalance: prev.currentBalance + delta,
+        projectedBuffer: prev.projectedBuffer + delta,
+      }));
+      showToast(
+        'Simulated Transaction Removed',
+        `Restored balance by ₹${Math.abs(tx.amount).toLocaleString('en-IN')}.`,
+        'info'
+      );
+    }
+  };
+
   // Quick reset demo function
   const handleResetDemo = () => {
     setUserState(INITIAL_USER_STATE);
     setStressAlert(INITIAL_STRESS_ALERT);
     setTransactions(MOCK_TRANSACTIONS);
+    setCommitments(INITIAL_COMMITMENTS);
+    setPolicies(INITIAL_INSURANCE_POLICIES);
     setActiveTab('dashboard');
   };
 
@@ -252,12 +317,14 @@ export default function App() {
         userState={userState}
         onOpenResponsibleAi={() => setIsResponsibleAiOpen(true)}
         onOpenCopilot={() => setIsCopilotOpen(true)}
+        onOpenSimulateTx={() => setIsSimulateModalOpen(true)}
         onResetDemo={handleResetDemo}
         onLogout={handleLogout}
         isMobileOpen={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
         correctedCount={correctedCount}
         warningCapsCount={warningCapsCount}
+        hasSimulatedTx={transactions.some(t => t.isSimulated || t.status === 'SIMULATED')}
       />
 
       {/* MAIN VIEWPORT CONTAINER (Padded left for desktop sidebar) */}
@@ -268,6 +335,7 @@ export default function App() {
           onOpenMobileMenu={() => setIsMobileSidebarOpen(true)}
           onOpenNotifications={() => setIsNotificationsOpen(true)}
           onOpenCopilot={() => setIsCopilotOpen(true)}
+          onOpenSimulateTx={() => setIsSimulateModalOpen(true)}
           onOpenResponsibleAi={() => setIsResponsibleAiOpen(true)}
           onLogout={handleLogout}
           unreadCount={notifications.length}
@@ -288,41 +356,49 @@ export default function App() {
                 Judges&rsquo; Quick Tour:
               </span>
               <span className="text-slate-300 hidden md:inline">
-                1. Inspect Dashboard &amp; 80% spending caps &rarr; 2. Test ₹2L loan in &ldquo;What If?&rdquo; &rarr; 3. Edit category caps &rarr; 4. Check weekly email message preview.
+                1. Dashboard &amp; Caps &rarr; 2. Test Live Simulate Tx &rarr; 3. Unified &ldquo;What-If&rdquo; &rarr; 4. Commitments Timeline &rarr; 5. Health Score (72/100) &rarr; 6. Money-Flow &amp; PDF.
               </span>
             </div>
 
             <div className="flex items-center gap-3">
               <button
-                id="btn-quick-tour-caps"
-                onClick={() => setActiveTab('spending')}
+                id="btn-quick-tour-simulate"
+                onClick={() => setIsSimulateModalOpen(true)}
                 className="text-amber-300 hover:text-amber-200 font-semibold underline text-[11px]"
               >
-                Spending Caps ({warningCapsCount} &gt;80%)
+                Simulate Tx
+              </button>
+              <span className="text-slate-600">•</span>
+              <button
+                id="btn-quick-tour-commitments"
+                onClick={() => setActiveTab('commitments')}
+                className="text-indigo-300 hover:text-indigo-200 font-semibold underline text-[11px]"
+              >
+                Commitments
+              </button>
+              <span className="text-slate-600">•</span>
+              <button
+                id="btn-quick-tour-health"
+                onClick={() => setActiveTab('health')}
+                className="text-emerald-300 hover:text-emerald-200 font-semibold underline text-[11px]"
+              >
+                Health (72/100)
+              </button>
+              <span className="text-slate-600">•</span>
+              <button
+                id="btn-quick-tour-reports"
+                onClick={() => setActiveTab('reports')}
+                className="text-cyan-300 hover:text-cyan-200 font-semibold underline text-[11px]"
+              >
+                Reports &amp; PDF
               </button>
               <span className="text-slate-600">•</span>
               <button
                 id="btn-quick-tour-email"
                 onClick={() => setIsWeeklyEmailModalOpen(true)}
-                className="text-cyan-300 hover:text-cyan-200 font-semibold underline text-[11px]"
+                className="text-slate-300 hover:text-white font-semibold underline text-[11px]"
               >
                 Weekly Email
-              </button>
-              <span className="text-slate-600">•</span>
-              <button
-                id="btn-quick-tour-what-if"
-                onClick={() => setActiveTab('what-if')}
-                className="text-cyan-400 hover:text-cyan-300 font-semibold underline text-[11px]"
-              >
-                What If?
-              </button>
-              <span className="text-slate-600">•</span>
-              <button
-                id="btn-quick-tour-recategorize"
-                onClick={() => setActiveTab('transactions')}
-                className="text-emerald-400 hover:text-emerald-300 font-semibold underline text-[11px]"
-              >
-                Re-categorize
               </button>
             </div>
           </div>
@@ -340,6 +416,7 @@ export default function App() {
               onOpenStressModal={() => setIsWhyModalOpen(true)}
               onNavigateTab={(tab) => setActiveTab(tab)}
               onOpenCopilot={() => setIsCopilotOpen(true)}
+              onOpenSimulateTx={() => setIsSimulateModalOpen(true)}
               warningCapsCount={warningCapsCount}
               flaggedCategories={flaggedCategoryNames}
               onOpenEmailPreview={() => setIsWeeklyEmailModalOpen(true)}
@@ -365,6 +442,19 @@ export default function App() {
             </div>
           )}
 
+          {/* COMMITMENTS & INSURANCE TIMELINE TAB */}
+          {activeTab === 'commitments' && (
+            <div className="animate-in fade-in duration-200">
+              <CommitmentsPage
+                commitments={commitments}
+                policies={policies}
+                userState={userState}
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenWhatIf={() => setActiveTab('what-if')}
+              />
+            </div>
+          )}
+
           {/* WHAT IF SIMULATOR TAB */}
           {activeTab === 'what-if' && (
             <div className="animate-in fade-in duration-200">
@@ -372,12 +462,37 @@ export default function App() {
             </div>
           )}
 
-          {/* TRANSACTIONS TAB (With Re-categorize feature and User-corrected badge) */}
+          {/* FINANCIAL HEALTH SCORE 0-100 TAB */}
+          {activeTab === 'health' && (
+            <div className="animate-in fade-in duration-200">
+              <FinancialHealthView
+                userState={userState}
+                onOpenCopilot={() => setIsCopilotOpen(true)}
+                onOpenWhatIf={() => setActiveTab('what-if')}
+                onOpenCommitments={() => setActiveTab('commitments')}
+              />
+            </div>
+          )}
+
+          {/* REPORTS & PDF EXPORT TAB */}
+          {activeTab === 'reports' && (
+            <div className="animate-in fade-in duration-200">
+              <ReportsPage
+                userState={userState}
+                transactions={transactions}
+                spendingCaps={spendingCaps}
+              />
+            </div>
+          )}
+
+          {/* TRANSACTIONS TAB (With Re-categorize feature, Simulated Badge & Quick Simulator) */}
           {activeTab === 'transactions' && (
             <div className="animate-in fade-in duration-200">
               <TransactionsTable 
                 transactions={transactions} 
                 onUpdateTransaction={handleUpdateTransaction}
+                onOpenSimulateTx={() => setIsSimulateModalOpen(true)}
+                onRemoveSimulatedTx={handleRemoveSimulatedTx}
               />
             </div>
           )}
@@ -505,6 +620,17 @@ export default function App() {
         isOpen={isCopilotOpen}
         onClose={() => setIsCopilotOpen(false)}
         userState={userState}
+      />
+
+      <LiveTransactionSimulatorModal
+        isOpen={isSimulateModalOpen}
+        onClose={() => setIsSimulateModalOpen(false)}
+        userState={userState}
+        onApplyTransaction={handleApplySimulatedTx}
+        onOpenWhatIf={() => {
+          setIsSimulateModalOpen(false);
+          setActiveTab('what-if');
+        }}
       />
 
       {/* Floating Real-Time In-App Alert Toast */}

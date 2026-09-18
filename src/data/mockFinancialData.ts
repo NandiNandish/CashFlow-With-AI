@@ -7,7 +7,10 @@ import {
   FinancialBriefItem,
   SmartRecommendation,
   StressAlert,
-  UserFinancialState
+  UserFinancialState,
+  Commitment,
+  InsurancePolicy,
+  Loan
 } from '../types';
 
 export const INITIAL_USER_STATE: UserFinancialState = {
@@ -538,8 +541,102 @@ export const SYNTHETIC_TRANSACTIONS: Transaction[] = [
   },
 ];
 
+export const INITIAL_COMMITMENTS: Commitment[] = [
+  {
+    id: 'cmt-1',
+    name: 'House Rent (Indiranagar)',
+    category: 'Housing',
+    amount: 12000,
+    frequency: 'Monthly',
+    dueDate: '5 Sep',
+    dueDayNumber: 5,
+    status: 'PAID',
+    projectedImpact: 'Regular monthly housing commitment already settled for current billing cycle.',
+  },
+  {
+    id: 'cmt-2',
+    name: 'Personal Loan EMI',
+    category: 'EMI & Loans',
+    amount: 6500,
+    frequency: 'Monthly',
+    dueDate: '12 Sep',
+    dueDayNumber: 12,
+    status: 'DUE SOON',
+    projectedImpact: 'Reduces liquid buffer by ₹6,500 prior to mid-month discretionary spending window.',
+  },
+  {
+    id: 'cmt-3',
+    name: 'Broadband & Utilities Bill',
+    category: 'Bills & Utilities',
+    amount: 1500,
+    frequency: 'Monthly',
+    dueDate: '20 Sep',
+    dueDayNumber: 20,
+    status: 'UPCOMING',
+    projectedImpact: 'Fixed utility obligation hitting right before Week 3 cash-flow dip.',
+  },
+  {
+    id: 'cmt-4',
+    name: 'Health Insurance Annual Premium',
+    category: 'Insurance',
+    amount: 12000,
+    frequency: 'Annual',
+    dueDate: '25 Sep',
+    dueDayNumber: 25,
+    status: 'UPCOMING',
+    isInsurance: true,
+    policyType: 'Health',
+    projectedImpact: 'Significant annual lump-sum outflow causing temporary negative buffer if unscheduled.',
+  },
+];
+
+export const INITIAL_INSURANCE_POLICIES: InsurancePolicy[] = [
+  {
+    id: 'ins-1',
+    providerLabel: 'Health Guard Optima (Comprehensive)',
+    type: 'Health',
+    premium: 12000,
+    frequency: 'Annual',
+    nextPaymentDate: '25 Sep',
+    dueDayNumber: 25,
+    policyLabel: 'Family Health Cover (₹10L Sum Insured)',
+    projectedBufferBefore: 9500,
+    projectedBufferAfter: -2500,
+    neutralExplanation: 'This payment creates a temporary reduction in your projected buffer. Its timing overlaps with existing commitments.',
+  },
+  {
+    id: 'ins-2',
+    providerLabel: 'Term Life Shield',
+    type: 'Life',
+    premium: 900,
+    frequency: 'Monthly',
+    nextPaymentDate: '28 Sep',
+    dueDayNumber: 28,
+    policyLabel: 'Pure Protection Term Plan',
+    projectedBufferBefore: 9500,
+    projectedBufferAfter: 8600,
+    neutralExplanation: 'Monthly recurring premium easily absorbed by standard buffer reserves.',
+  },
+];
+
+export const INITIAL_LOANS: Loan[] = [
+  {
+    id: 'loan-1',
+    name: 'Personal Loan (Auto Refinance)',
+    principal: 200000,
+    interestRate: 11.5,
+    tenure: 36,
+    emi: 6500,
+    startDate: '12 Jan 2025',
+  },
+];
+
 export const MOCK_TRANSACTIONS = SYNTHETIC_TRANSACTIONS;
 export const MOCK_CATEGORY_SPENDING = INITIAL_CATEGORY_SPENDING;
 export const MOCK_FINANCIAL_BRIEFS = INITIAL_FINANCIAL_BRIEF;
 export const MOCK_SMART_RECOMMENDATIONS = INITIAL_SMART_RECOMMENDATIONS;
+export const MOCK_COMMITMENTS = INITIAL_COMMITMENTS;
+export const MOCK_INSURANCE_POLICIES = INITIAL_INSURANCE_POLICIES;
+export const MOCK_LOANS = INITIAL_LOANS;
+
 

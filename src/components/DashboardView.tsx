@@ -33,6 +33,7 @@ interface DashboardViewProps {
   onOpenStressModal: () => void;
   onNavigateTab: (tabId: string) => void;
   onOpenCopilot: () => void;
+  onOpenSimulateTx?: () => void;
   warningCapsCount?: number;
   flaggedCategories?: string[];
   onOpenEmailPreview?: () => void;
@@ -46,6 +47,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenStressModal,
   onNavigateTab,
   onOpenCopilot,
+  onOpenSimulateTx,
   warningCapsCount = 0,
   flaggedCategories = [],
   onOpenEmailPreview,
@@ -134,46 +136,69 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         {/* Quick Action Launchpad */}
         <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col justify-between">
           <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-cyan-400" />
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white">
-                Dashboard Actions
-              </h3>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-cyan-400" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">
+                  Dashboard Actions
+                </h3>
+              </div>
+              {onOpenSimulateTx && (
+                <button
+                  onClick={onOpenSimulateTx}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <Sparkles className="w-2.5 h-2.5" />
+                  <span>Simulate Tx</span>
+                </button>
+              )}
             </div>
             <p className="text-[11px] text-slate-400 mb-3">
               Direct access to interactive planning tools
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             <button
               id="btn-dash-action-whatif"
               onClick={() => onNavigateTab('what-if')}
-              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-left transition-all group"
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-left transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-1.5 text-cyan-400 text-xs font-semibold">
                 <Sliders className="w-3.5 h-3.5" />
                 <span>What-If?</span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Test ₹2L EMI load</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Loan &amp; EMI test</div>
             </button>
 
             <button
-              id="btn-dash-action-tx"
-              onClick={() => onNavigateTab('transactions')}
-              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-left transition-all group"
+              id="btn-dash-action-commitments"
+              onClick={() => onNavigateTab('commitments')}
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 text-left transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5 text-indigo-400 text-xs font-semibold">
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Commitments</span>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">₹18.5k scheduled</div>
+            </button>
+
+            <button
+              id="btn-dash-action-health"
+              onClick={() => onNavigateTab('health')}
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 text-left transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
-                <ReceiptText className="w-3.5 h-3.5" />
-                <span>Re-categorize</span>
+                <Activity className="w-3.5 h-3.5" />
+                <span>Health Score</span>
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">{userCorrectedCount} edited</div>
+              <div className="text-[10px] text-emerald-400/85 mt-0.5 font-mono">72 / 100</div>
             </button>
 
             <button
               id="btn-dash-action-spending"
               onClick={() => onNavigateTab('spending')}
-              className={`p-2.5 rounded-xl border text-left transition-all group ${
+              className={`p-2.5 rounded-xl border text-left transition-all group cursor-pointer ${
                 warningCapsCount > 0
                   ? 'bg-amber-950/30 border-amber-500/40 hover:border-amber-500/70'
                   : 'bg-slate-950 hover:bg-slate-800 border-slate-800 hover:border-blue-500/40'
@@ -184,23 +209,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   warningCapsCount > 0 ? 'text-amber-400' : 'text-blue-400'
                 }`}>
                   <PieChart className="w-3.5 h-3.5" />
-                  <span>Spending Caps</span>
+                  <span>Caps &amp; Email</span>
                 </div>
-                {warningCapsCount > 0 && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    {warningCapsCount} &gt;80%
-                  </span>
-                )}
               </div>
               <div className="text-[10px] text-slate-400 mt-0.5">
-                {warningCapsCount > 0 ? 'Near budget cap' : 'Category guardrails'}
+                {warningCapsCount > 0 ? `${warningCapsCount} near cap` : '80% triggers'}
               </div>
+            </button>
+
+            <button
+              id="btn-dash-action-reports"
+              onClick={() => onNavigateTab('reports')}
+              className="p-2.5 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 text-left transition-all group cursor-pointer"
+            >
+              <div className="flex items-center gap-1.5 text-cyan-300 text-xs font-semibold">
+                <ReceiptText className="w-3.5 h-3.5" />
+                <span>Reports &amp; PDF</span>
+              </div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Money flow export</div>
             </button>
 
             <button
               id="btn-dash-action-copilot"
               onClick={onOpenCopilot}
-              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-950/60 to-blue-950/60 hover:from-cyan-900/60 hover:to-blue-900/60 border border-cyan-700/50 text-left transition-all group"
+              className="p-2.5 rounded-xl bg-gradient-to-r from-cyan-950/60 to-blue-950/60 hover:from-cyan-900/60 hover:to-blue-900/60 border border-cyan-700/50 text-left transition-all group cursor-pointer"
             >
               <div className="flex items-center gap-1.5 text-cyan-300 text-xs font-bold">
                 <Bot className="w-3.5 h-3.5 text-cyan-400" />

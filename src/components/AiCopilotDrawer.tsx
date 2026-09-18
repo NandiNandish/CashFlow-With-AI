@@ -44,12 +44,11 @@ export const AiCopilotDrawer: React.FC<AiCopilotDrawerProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const samplePrompts = [
-    'Why is my projected balance falling?',
-    'Where am I spending the most?',
-    'What expenses are increasing?',
-    'What happens if I take a ₹2 lakh loan?',
-    'How can I increase my monthly buffer?',
-    'Show me my biggest spending changes.',
+    'Why is my balance falling?',
+    'Can I take a 2 lakh loan?',
+    'What happens if insurance premium is due?',
+    'Where did I spend the most?',
+    'What are my upcoming commitments?',
   ];
 
   useEffect(() => {

@@ -117,28 +117,49 @@ export const ExplainableAiModal: React.FC<ExplainableAiModalProps> = ({
 
         {/* Content Body */}
         <div className="p-6 space-y-5 text-slate-300 text-xs sm:text-sm leading-relaxed">
+          {/* Section 13 Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Pressure Window</span>
+              <span className="text-sm font-bold text-amber-300 mt-0.5 block">Week 3</span>
+              <span className="text-[10px] text-slate-500">Days 18 to 24</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Lowest Balance</span>
+              <span className="text-sm font-bold text-amber-400 font-mono mt-0.5 block">₹4,500</span>
+              <span className="text-[10px] text-slate-500">Projected Day 23</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Safe Threshold</span>
+              <span className="text-sm font-bold text-cyan-300 font-mono mt-0.5 block">₹8,000</span>
+              <span className="text-[10px] text-slate-500">Target buffer floor</span>
+            </div>
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-rose-500/30 bg-rose-950/10">
+              <span className="text-[10px] uppercase font-bold text-rose-300 block">Relative Deficit</span>
+              <span className="text-sm font-bold text-rose-400 font-mono mt-0.5 block">₹3,500</span>
+              <span className="text-[10px] text-rose-300/80">Below threshold</span>
+            </div>
+          </div>
+
           {/* Summary Lead */}
           <div className="bg-slate-800/60 border border-slate-700/80 rounded-xl p-4">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-amber-400 mb-2">
-              Summary of Findings
+              Primary Root Causes
             </h4>
-            <p className="text-slate-200 font-medium text-sm mb-3">
-              Your projected buffer is estimated to be lower around Week 3 because:
-            </p>
-            <ol className="space-y-2 text-xs text-slate-300 list-decimal list-inside marker:text-amber-400">
-              <li>
-                <span className="font-semibold text-white">Recurring expenses increased:</span> ₹12,000 rent payment debits early on Day 10.
+            <ul className="space-y-2 text-xs text-slate-300">
+              <li className="flex items-start gap-2">
+                <span className="text-amber-400 font-bold">•</span>
+                <span><strong className="text-white">₹12,000 rent</strong> due on Day 5 debits liquid reserves early.</span>
               </li>
-              <li>
-                <span className="font-semibold text-white">Current discretionary spending is above average:</span> Dining out and Swiggy delivery is +18% higher than your 90-day baseline.
+              <li className="flex items-start gap-2">
+                <span className="text-amber-400 font-bold">•</span>
+                <span><strong className="text-white">₹6,500 personal loan EMI</strong> due on Day 12 arrives before monthly salary credit.</span>
               </li>
-              <li>
-                <span className="font-semibold text-white">EMI due prior to income arrival:</span> An active installment of ₹6,500 occurs on Day 12 before your primary monthly salary credit.
+              <li className="flex items-start gap-2">
+                <span className="text-amber-400 font-bold">•</span>
+                <span><strong className="text-white">Discretionary dining spending</strong> increased by <strong className="text-amber-300">+18%</strong> above 90-day baseline.</span>
               </li>
-              <li>
-                <span className="font-semibold text-white">Available buffer is smaller than usual:</span> Current liquid account balance (₹28,000) provides less cushion against concurrent peak outflows.
-              </li>
-            </ol>
+            </ul>
           </div>
 
           {/* Impact Breakdown Table */}

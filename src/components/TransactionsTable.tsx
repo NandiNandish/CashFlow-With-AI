@@ -19,15 +19,19 @@ import { EditTransactionModal } from './EditTransactionModal';
 interface TransactionsTableProps {
   transactions: Transaction[];
   onUpdateTransaction?: (updatedTx: Transaction) => void;
+  onOpenSimulateTx?: () => void;
+  onRemoveSimulatedTx?: (txId: string) => void;
 }
 
 export const TransactionsTable: React.FC<TransactionsTableProps> = ({ 
   transactions,
-  onUpdateTransaction
+  onUpdateTransaction,
+  onOpenSimulateTx,
+  onRemoveSimulatedTx
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
-  const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE' | 'USER_CORRECTED'>('ALL');
+  const [selectedFilter, setSelectedFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE' | 'USER_CORRECTED' | 'SIMULATED'>('ALL');
   
   // Modal state for editing
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
@@ -43,6 +47,10 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
     return transactions.filter((t) => t.isUserCorrected).length;
   }, [transactions]);
 
+  const simulatedCount = useMemo(() => {
+    return transactions.filter((t) => t.isSimulated || t.status === 'SIMULATED').length;
+  }, [transactions]);
+
   const filteredTransactions = useMemo(() => {
     return transactions.filter((tx) => {
       const matchesSearch = 
@@ -56,7 +64,8 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
         selectedFilter === 'ALL' ||
         (selectedFilter === 'INCOME' && tx.type === 'income') ||
         (selectedFilter === 'EXPENSE' && tx.type === 'expense') ||
-        (selectedFilter === 'USER_CORRECTED' && tx.isUserCorrected);
+        (selectedFilter === 'USER_CORRECTED' && tx.isUserCorrected) ||
+        (selectedFilter === 'SIMULATED' && (tx.isSimulated || tx.status === 'SIMULATED'));
 
       return matchesSearch && matchesCategory && matchesFilter;
     });
@@ -120,8 +129,20 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
             </p>
           </div>
 
-          {/* Quick Demo Re-categorize Action Button + Search */}
+          {/* Quick Actions: Simulate Tx & Re-categorize Demo */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            {onOpenSimulateTx && (
+              <button
+                id="btn-simulate-tx-table"
+                onClick={onOpenSimulateTx}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/40 text-xs font-semibold transition-all shadow-sm shrink-0"
+                title="Test a simulated transaction"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Simulate Transaction</span>
+              </button>
+            )}
+
             <button
               id="btn-quick-recategorize-demo"
               onClick={handleQuickDemoEdit}
@@ -196,6 +217,21 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>User-corrected ({userCorrectedCount})</span>
             </button>
+
+            {simulatedCount > 0 && (
+              <button
+                id="btn-filter-simulated"
+                onClick={() => setSelectedFilter('SIMULATED')}
+                className={`px-3 py-1 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
+                  selectedFilter === 'SIMULATED'
+                    ? 'bg-amber-500 text-slate-950 font-bold'
+                    : 'text-amber-300 hover:text-amber-200'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>Simulated ({simulatedCount})</span>
+              </button>
+            )}
           </div>
 
           {/* Category Selector */}
@@ -272,9 +308,22 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
                       </span>
                     </td>
 
-                    {/* Classification Status / User-corrected Badge */}
+                    {/* Classification Status / User-corrected / Simulated Badge */}
                     <td className="py-3.5 px-4">
-                      {tx.isUserCorrected ? (
+                      {tx.isSimulated || tx.status === 'SIMULATED' ? (
+                        <div className="space-y-0.5">
+                          <span 
+                            id={`badge-simulated-${tx.id}`}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold tracking-wider shadow-xs shadow-amber-950 animate-pulse"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-400" />
+                            SIMULATED • NO REAL PAYMENT MADE
+                          </span>
+                          <div className="text-[10px] text-amber-400/80 font-medium">
+                            Live What-If Sandbox Active
+                          </div>
+                        </div>
+                      ) : tx.isUserCorrected ? (
                         <div className="space-y-0.5">
                           <span 
                             id={`badge-user-corrected-${tx.id}`}
@@ -304,22 +353,34 @@ export const TransactionsTable: React.FC<TransactionsTableProps> = ({
 
                     {/* Amount */}
                     <td className="py-3.5 px-4 text-right whitespace-nowrap font-mono font-bold text-sm">
-                      <span className={isIncome ? 'text-emerald-400' : 'text-slate-200'}>
+                      <span className={isIncome ? 'text-emerald-400' : tx.isSimulated ? 'text-amber-300' : 'text-slate-200'}>
                         {formatINR(tx.amount, { signed: true })}
                       </span>
                     </td>
 
-                    {/* Action: Re-categorize */}
+                    {/* Action: Re-categorize or Remove Simulation */}
                     <td className="py-3.5 px-4 text-center">
-                      <button
-                        id={`btn-edit-tx-${tx.id}`}
-                        onClick={() => handleOpenEdit(tx)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-600 hover:text-white text-slate-300 border border-slate-700 hover:border-cyan-500 text-[11px] font-medium transition-all shadow-xs"
-                        title="Re-categorize this transaction"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                        <span>Re-categorize</span>
-                      </button>
+                      {tx.isSimulated && onRemoveSimulatedTx ? (
+                        <button
+                          id={`btn-remove-sim-tx-${tx.id}`}
+                          onClick={() => onRemoveSimulatedTx(tx.id)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-medium transition-all shadow-xs"
+                          title="Remove this simulated transaction"
+                        >
+                          <RotateCcw className="w-3 h-3 text-rose-400" />
+                          <span>Remove</span>
+                        </button>
+                      ) : (
+                        <button
+                          id={`btn-edit-tx-${tx.id}`}
+                          onClick={() => handleOpenEdit(tx)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-cyan-600 hover:text-white text-slate-300 border border-slate-700 hover:border-cyan-500 text-[11px] font-medium transition-all shadow-xs"
+                          title="Re-categorize this transaction"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          <span>Re-categorize</span>
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );

@@ -16,6 +16,7 @@ interface TopNavProps {
   onOpenMobileMenu: () => void;
   onOpenNotifications: () => void;
   onOpenCopilot: () => void;
+  onOpenSimulateTx?: () => void;
   onOpenResponsibleAi: () => void;
   onLogout?: () => void;
   unreadCount?: number;
@@ -26,6 +27,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onOpenMobileMenu,
   onOpenNotifications,
   onOpenCopilot,
+  onOpenSimulateTx,
   onOpenResponsibleAi,
   onLogout,
   unreadCount = 3,
@@ -37,10 +39,16 @@ export const TopNav: React.FC<TopNavProps> = ({
         return { title: 'Financial Dashboard', desc: 'Real-time liquidity buffer & predictive stress diagnostics' };
       case 'cashflow':
         return { title: 'Projected Cash Flow', desc: 'Forward 30-day liquidity simulation' };
+      case 'commitments':
+        return { title: 'Financial Commitments & Timeline', desc: 'Mandatory scheduled obligations & insurance cash-flow impact' };
       case 'what-if':
-        return { title: 'What If? Simulator', desc: 'EMI impact & financial decision sandbox' };
+        return { title: 'Unified "What-If" Sandbox', desc: 'Loan, transaction, insurance, income & spending decision simulator' };
+      case 'health':
+        return { title: 'Financial Health Score', desc: 'Transparent 5-factor scoring engine (0-100) with diagnostic factors' };
+      case 'reports':
+        return { title: 'Financial Reports & PDF Export', desc: 'Diagrammatic money-flow visualization & downloadable executive PDF' };
       case 'transactions':
-        return { title: 'Transactions Ledger', desc: 'Manual re-categorization & NLP classification' };
+        return { title: 'Transactions Ledger', desc: 'Manual re-categorization & live transaction simulation' };
       case 'spending':
         return { title: 'Spending & Custom Caps', desc: 'Category budget caps, 80% threshold triggers & weekly email digest' };
       case 'insights':
@@ -78,8 +86,19 @@ export const TopNav: React.FC<TopNavProps> = ({
           </div>
         </div>
 
-        {/* Right: Notifications, Demo Badge, and AI Copilot */}
+        {/* Right: Notifications, Simulate Button, Demo Badge, and AI Copilot */}
         <div className="flex items-center gap-2.5">
+          {/* Simulate Transaction Button */}
+          {onOpenSimulateTx && (
+            <button
+              onClick={onOpenSimulateTx}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1.5 shadow-sm"
+              title="Test a live simulated transaction"
+            >
+              <Sliders className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden md:inline">Simulate Tx</span>
+            </button>
+          )}
           {/* Synthetic Demo Badge */}
           <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
